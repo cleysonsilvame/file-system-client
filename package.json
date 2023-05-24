@@ -12,16 +12,13 @@
   "dependencies": {
     "@zip.js/zip.js": "^2.7.14",
     "axios": "^1.4.0",
-    "indexed-db-stream": "^1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "stream-browserify": "^3.0.0",
     "streamsaver": "^2.0.6",
     "zip-js": "^0.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.2.1",
-    "@types/pako": "^2.0.0",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@types/streamsaver": "^2.0.1",

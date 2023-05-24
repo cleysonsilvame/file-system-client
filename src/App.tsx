@@ -1,41 +1,16 @@
 import { ZipWriter } from '@zip.js/zip.js'
 import axios from 'axios'
 import { useState } from 'react'
+import { trackProgress } from './utils'
 
 const ZIPPED_DIR = 'zipped-files'
-
-function trackProgress<T>(
-  promises: Promise<T>[],
-  callback: (progress: number) => void
-) {
-  let completedCount = 0
-  const totalCount = promises.length
-
-  return new Promise((resolve, reject) => {
-    promises.forEach(promise => {
-      promise
-        .then(result => {
-          completedCount++
-
-          const progress = Math.round((completedCount / totalCount) * 100)
-          callback(progress)
-
-          if (completedCount === totalCount) {
-            resolve(result) // Todas as promessas foram resolvidas
-          }
-        })
-        .catch(error => {
-          reject(error) // Uma promessa foi rejeitada
-        })
-    })
-  })
-}
-
 
 function App() {
   const [progressMessages, setProgressMessages] = useState<string[]>([])
 
   async function handleInputChange(files: FileList) {
+    const rootDir = await navigator.storage.getDirectory()
+
     try {
       if (files.length === 0) {
         console.error('Nenhum arquivo selecionado.')
@@ -51,16 +26,13 @@ function App() {
       if (totalOfBytes > estimation.quota!) {
         throw new Error(
           `Sem espaço para converter os arquivos em ZIP, por favor, limpe o computador para liberar espaço (${
-            totalOfBytes / 1e+9
-
+            totalOfBytes / 1e9
           } MB)`
         )
       }
 
-      handleProgressMessage(`Espaço usado: (${estimation.usage! / 1e+9
-} MB)`)
+      handleProgressMessage(`Espaço usado: (${estimation.usage! / 1e9} MB)`)
 
-      const rootDir = await navigator.storage.getDirectory()
       const zippedDir = await rootDir.getDirectoryHandle(ZIPPED_DIR, {
         create: true,
       })
@@ -86,12 +58,13 @@ function App() {
       await getFile()
     } catch (error: any) {
       alert(error.message)
+      await rootDir.removeEntry(ZIPPED_DIR, { recursive: true })
     }
   }
 
   async function getFile() {
+    const rootDir = await navigator.storage.getDirectory()
     try {
-      const rootDir = await navigator.storage.getDirectory()
       const zippedDir = await rootDir.getDirectoryHandle(ZIPPED_DIR)
       const fileZip = await zippedDir.getFileHandle('demand_id.zip')
       const file = await fileZip.getFile()
@@ -115,6 +88,7 @@ function App() {
       await rootDir.removeEntry(ZIPPED_DIR, { recursive: true })
     } catch (error: any) {
       alert(error.message)
+      await rootDir.removeEntry(ZIPPED_DIR, { recursive: true })
     }
   }
 
@@ -127,18 +101,17 @@ function App() {
   }
 
   return (
-    <>
+    <div>
       <input
         type='file'
         multiple
         onChange={e => e.target.files && handleInputChange(e.target.files)}
       />
       <button onClick={getFile}>get file</button>
-
       {progressMessages.map(message => {
         return <p key={message}>{message}</p>
       })}
-    </>
+    </div>
   )
 }
 
